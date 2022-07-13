@@ -14,7 +14,7 @@ I used:
 - GLFW to manage the window and the OpenGL context.
 
 ## TODO
-- Add ImgUI for user interface.
+- Add ImGUI for user interface.
 - Increase and decrease size of brush to add fluid by scrolling.
 - Add colors to the simulation.
 - Add high and low pressure spots so that the fluid flows.
