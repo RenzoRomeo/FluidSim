@@ -10,7 +10,7 @@ You can add fluid with the LMB (Left Mouse Button).
 
 I used:
 - OpenGL as the graphics API.
-- Glad for the OpengL bindings.
+- Glad for the OpenGL bindings.
 - GLFW to manage the window and the OpenGL context.
 
 ## TODO
