@@ -14,14 +14,13 @@ struct Vertex
 class GridRenderer
 {
 public:
-	GridRenderer(FluidGrid* grid, uint32_t grid_size, uint32_t screen_size);
+	GridRenderer(FluidGrid* grid, uint32_t screenWidth, uint32_t screenHeight);
 	~GridRenderer();
 
 	void RenderGrid();
 private:
 	uint32_t m_Vao, m_Vbo;
-	uint32_t m_GridSize;
-	uint32_t m_ScreenSize;
+	uint32_t m_ScreenWidth, m_ScreenHeight;
 	Shader m_Shader;
 	FluidGrid* m_FluidGrid;
 };

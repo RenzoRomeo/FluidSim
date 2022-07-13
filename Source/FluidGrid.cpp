@@ -1,14 +1,14 @@
 #include "FluidGrid.h"
 
-FluidGrid::FluidGrid(uint32_t size, double diffusion, double viscocity, double dt)
-	: m_Size(size), m_Diff(diffusion), m_Visc(viscocity), m_dt(dt)
+FluidGrid::FluidGrid(uint32_t width, uint32_t height, double diffusion, double viscocity, double dt)
+	: m_Width(width), m_Height(height), m_Diff(diffusion), m_Visc(viscocity), m_dt(dt)
 {
-	m_s = new double[m_Size * m_Size]{ 0 };
-	m_Density = new double[m_Size * m_Size]{ 0 };
-	m_Vx = new double[m_Size * m_Size]{ 0 };
-	m_Vy = new double[m_Size * m_Size]{ 0 };
-	m_Vx0 = new double[m_Size * m_Size]{ 0 };
-	m_Vy0 = new double[m_Size * m_Size]{ 0 };
+	m_s = new double[m_Width * m_Height]{ 0 };
+	m_Density = new double[m_Width * m_Height]{ 0 };
+	m_Vx = new double[m_Width * m_Height]{ 0 };
+	m_Vy = new double[m_Width * m_Height]{ 0 };
+	m_Vx0 = new double[m_Width * m_Height]{ 0 };
+	m_Vy0 = new double[m_Width * m_Height]{ 0 };
 }
 
 FluidGrid::~FluidGrid()
@@ -55,38 +55,38 @@ double FluidGrid::GetDensity(uint32_t x, uint32_t y) const
 
 void FluidGrid::Diffuse(int32_t b, double* x, double* x0, double diff)
 {
-	float a = m_dt * diff * (m_Size - 2) * (m_Size - 2);
-	LinSolve(b, x, x0, a, 1 + 6 * a);
+	float a = m_dt * diff * (m_Width - 2) * (m_Height - 2);
+	LinSolve(b, x, x0, a, 1 + 4 * a);
 }
 
 void FluidGrid::SetBounds(int32_t b, double* x)
 {
-	for (uint32_t i = 1; i < m_Size - 1; i++) {
+	for (uint32_t i = 1; i < m_Width - 1; i++) {
 		x[Index(i, 0)] = b == 2 ? -x[Index(i, 1)] : x[Index(i, 1)];
-		x[Index(i, m_Size - 1)] = b == 2 ? -x[Index(i, m_Size - 2)] : x[Index(i, m_Size - 2)];
+		x[Index(i, m_Width - 1)] = b == 2 ? -x[Index(i, m_Width - 2)] : x[Index(i, m_Width - 2)];
 	}
 
-	for (uint32_t j = 1; j < m_Size - 1; j++) {
+	for (uint32_t j = 1; j < m_Height - 1; j++) {
 		x[Index(0, j)] = b == 1 ? -x[Index(1, j)] : x[Index(1, j)];
-		x[Index(m_Size - 1, j)] = b == 1 ? -x[Index(m_Size - 2, j)] : x[Index(m_Size - 2, j)];
+		x[Index(m_Height - 1, j)] = b == 1 ? -x[Index(m_Height - 2, j)] : x[Index(m_Height - 2, j)];
 	}
 
 	x[Index(0, 0)] = 0.5 * (x[Index(1, 0)] + x[Index(0, 1)]);
-	x[Index(0, m_Size - 1)] = 0.5 * (x[Index(1, m_Size - 1)] + x[Index(0, m_Size - 2)]);
-	x[Index(m_Size - 1, 0)] = 0.5 * (x[Index(m_Size - 2, 0)] + x[Index(m_Size - 1, 1)]);
-	x[Index(m_Size - 1, m_Size - 1)] = 0.5 * (x[Index(m_Size - 2, m_Size - 1)] + x[Index(m_Size - 1, m_Size - 2)]);
+	x[Index(0, m_Height - 1)] = 0.5 * (x[Index(1, m_Height - 1)] + x[Index(0, m_Height - 2)]);
+	x[Index(m_Width - 1, 0)] = 0.5 * (x[Index(m_Width - 2, 0)] + x[Index(m_Width - 1, 1)]);
+	x[Index(m_Width - 1, m_Height - 1)] = 0.5 * (x[Index(m_Width - 2, m_Height - 1)] + x[Index(m_Width - 1, m_Height - 2)]);
 }
 
 void FluidGrid::Project(double* velocX, double* velocY, double* p, double* div)
 {
-	for (uint32_t j = 1; j < m_Size - 1; j++) {
-		for (uint32_t i = 1; i < m_Size - 1; i++) {
+	for (uint32_t j = 1; j < m_Height - 1; j++) {
+		for (uint32_t i = 1; i < m_Width - 1; i++) {
 			div[Index(i, j)] = -0.5f * (
-				velocX[Index(i + 1, j)]
-				- velocX[Index(i - 1, j)]
-				+ velocY[Index(i, j + 1)]
-				- velocY[Index(i, j - 1)]
-				) / m_Size;
+				velocX[Index(i + 1, j)] / m_Width
+				- velocX[Index(i - 1, j)] / m_Width
+				+ velocY[Index(i, j + 1)] / m_Height
+				- velocY[Index(i, j - 1)] / m_Height
+				);
 			p[Index(i, j)] = 0;
 		}
 	}
@@ -95,12 +95,12 @@ void FluidGrid::Project(double* velocX, double* velocY, double* p, double* div)
 	SetBounds(0, p);
 	LinSolve(0, p, div, 1, 6);
 
-	for (uint32_t j = 1; j < m_Size - 1; j++) {
-		for (uint32_t i = 1; i < m_Size - 1; i++) {
+	for (uint32_t j = 1; j < m_Height - 1; j++) {
+		for (uint32_t i = 1; i < m_Width - 1; i++) {
 			velocX[Index(i, j)] -= 0.5f * (p[Index(i + 1, j)]
-				- p[Index(i - 1, j)]) * m_Size;
+				- p[Index(i - 1, j)]) * m_Width;
 			velocY[Index(i, j)] -= 0.5f * (p[Index(i, j + 1)]
-				- p[Index(i, j - 1)]) * m_Size;
+				- p[Index(i, j - 1)]) * m_Height;
 		}
 	}
 
@@ -112,30 +112,31 @@ void FluidGrid::Advect(int32_t b, double* d, double* d0, double* velocX, double*
 {
 	double i0, i1, j0, j1;
 
-	double dtx = m_dt * (m_Size - 2);
-	double dty = m_dt * (m_Size - 2);
+	double dtx = m_dt * (m_Width - 2);
+	double dty = m_dt * (m_Height - 2);
 
 	double s0, s1, t0, t1;
 	double tmp1, tmp2, x, y;
 
-	double Nfloat = m_Size;
+	double widthFloat = m_Width;
+	double heightFloat = m_Height;
 	double ifloat, jfloat;
 	uint32_t i, j;
 
-	for (j = 1, jfloat = 1; j < m_Size - 1; j++, jfloat++) {
-		for (i = 1, ifloat = 1; i < m_Size - 1; i++, ifloat++) {
+	for (j = 1, jfloat = 1; j < heightFloat - 1; j++, jfloat++) {
+		for (i = 1, ifloat = 1; i < widthFloat - 1; i++, ifloat++) {
 			tmp1 = dtx * velocX[Index(i, j)];
 			tmp2 = dty * velocY[Index(i, j)];
 			x = ifloat - tmp1;
 			y = jfloat - tmp2;
 
 			if (x < 0.5f) x = 0.5f;
-			if (x > Nfloat + 0.5f) x = Nfloat + 0.5f;
+			if (x > widthFloat + 0.5f) x = widthFloat + 0.5f;
 			i0 = floorf(x);
 			i1 = i0 + 1.0f;
 
 			if (y < 0.5f) y = 0.5f;
-			if (y > Nfloat + 0.5f) y = Nfloat + 0.5f;
+			if (y > heightFloat + 0.5f) y = heightFloat + 0.5f;
 			j0 = floorf(y);
 			j1 = j0 + 1.0f;
 
@@ -150,12 +151,9 @@ void FluidGrid::Advect(int32_t b, double* d, double* d0, double* velocX, double*
 			int32_t j1i = j1;
 
 			d[Index(i, j)] =
-				s0 * (t0 * d0[Index(i0i, j0i)])
-				+ (t1 * d0[Index(i0i, j1i)])
-				+ s1 * (t0 * d0[Index(i1i, j0i)])
-				+ (t1 * d0[Index(i1i, j1i)]);
+				s0 * (t0 * d0[Index(i0i, j0i)] + t1 * d0[Index(i0i, j1i)])
+				+ s1 * (t0 * d0[Index(i1i, j0i)] + t1 * d0[Index(i1i, j1i)]);
 		}
-
 	}
 	SetBounds(b, d);
 }
@@ -164,8 +162,8 @@ void FluidGrid::LinSolve(int32_t b, double* x, double* x0, double a, double c)
 {
 	double cRecip = 1.0 / c;
 	for (uint32_t k = 0; k < 4; k++) {
-		for (uint32_t j = 1; j < m_Size - 1; j++) {
-			for (uint32_t i = 1; i < m_Size - 1; i++) {
+		for (uint32_t j = 1; j < m_Height - 1; j++) {
+			for (uint32_t i = 1; i < m_Width - 1; i++) {
 				x[Index(i, j)] =
 					(x0[Index(i, j)]
 						+ a * (x[Index(i + 1, j)]

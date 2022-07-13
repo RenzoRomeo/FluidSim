@@ -7,7 +7,7 @@
 class Simulation
 {
 public:
-	Simulation(uint32_t grid_size, uint32_t screen_size);
+	Simulation(uint32_t gridWidth, uint32_t gridHeight, uint32_t screenWidth, uint32_t screenHeight);
 
 	void Run();
 	void UserInput();

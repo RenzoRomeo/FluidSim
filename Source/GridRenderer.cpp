@@ -9,8 +9,8 @@ void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum se
 	std::cout << "Error [OpenGL]: " << message << '\n';
 }
 
-GridRenderer::GridRenderer(FluidGrid* grid, uint32_t grid_size, uint32_t screen_size)
-	: m_GridSize(grid_size), m_ScreenSize(screen_size), m_FluidGrid(grid)
+GridRenderer::GridRenderer(FluidGrid* grid, uint32_t screenWidth, uint32_t screenHeight)
+	: m_ScreenWidth(screenWidth), m_ScreenHeight(screenHeight), m_FluidGrid(grid)
 {
 	if (!gladLoadGL())
 	{
@@ -18,7 +18,7 @@ GridRenderer::GridRenderer(FluidGrid* grid, uint32_t grid_size, uint32_t screen_
 		exit(1);
 	}
 
-	glViewport(0, 0, screen_size, screen_size);
+	glViewport(0, 0, m_ScreenWidth, m_ScreenHeight);
 	glDebugMessageCallback(MessageCallback, 0);
 
 	m_Shader = Shader("./Resources/Shaders/vertex.shader", "./Resources/Shaders/fragment.shader");
@@ -37,21 +37,23 @@ GridRenderer::~GridRenderer()
 void GridRenderer::RenderGrid()
 {
 	std::vector<Vertex> vertices;
-	float quadSize = 2.0f / m_GridSize;
 
-	for (uint32_t y = 0; y < m_GridSize; y++)
+	float quadWidth = 2.0f / m_FluidGrid->GetWidth();
+	float quadHeight = 2.0f / m_FluidGrid->GetHeight();
+
+	for (uint32_t y = 0; y < m_FluidGrid->GetHeight(); y++)
 	{
-		float yPos = -1.0f + y * quadSize;
-		for (uint32_t x = 0; x < m_GridSize; x++)
+		float yPos = -1.0f + y * quadHeight;
+		for (uint32_t x = 0; x < m_FluidGrid->GetWidth(); x++)
 		{
-			float xPos = -1.0f + x * quadSize;
+			float xPos = -1.0f + x * quadWidth;
 			float d = m_FluidGrid->GetDensity(x, y);
-			vertices.push_back({ xPos, yPos,  d});
-			vertices.push_back({ xPos + quadSize, yPos, d });
-			vertices.push_back({ xPos + quadSize, yPos + quadSize, d });
+			vertices.push_back({ xPos, yPos,  d });
+			vertices.push_back({ xPos + quadWidth, yPos, d });
+			vertices.push_back({ xPos + quadWidth, yPos + quadHeight, d });
 			vertices.push_back({ xPos, yPos, d });
-			vertices.push_back({ xPos + quadSize, yPos + quadSize, d });
-			vertices.push_back({ xPos , yPos + quadSize, d });
+			vertices.push_back({ xPos + quadWidth, yPos + quadHeight, d });
+			vertices.push_back({ xPos , yPos + quadHeight, d });
 		}
 	}
 
