@@ -4,7 +4,7 @@
 
 int main()
 {
-	Simulation sim(50, 50, 600, 600);
+	Simulation sim(50, 50, 900, 600);
 	sim.Run();
 	return 0;
 }

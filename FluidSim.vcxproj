@@ -157,6 +157,7 @@
     <ClInclude Include="Source\Window.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="README.md" />
     <None Include="Resources\Shaders\fragment.shader" />
     <None Include="Resources\Shaders\vertex.shader" />
   </ItemGroup>

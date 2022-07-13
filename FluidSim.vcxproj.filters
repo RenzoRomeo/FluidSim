@@ -63,5 +63,6 @@
   <ItemGroup>
     <None Include="Resources\Shaders\vertex.shader" />
     <None Include="Resources\Shaders\fragment.shader" />
+    <None Include="README.md" />
   </ItemGroup>
 </Project>
